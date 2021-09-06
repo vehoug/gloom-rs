@@ -1,3 +1,11 @@
+// Uncomment the following crate-wide attriutes to silence warnings of "low" interest:
+/*
+#![allow(unused_mut)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unreachable_code)]
+#![allow(non_snake_case)]
+*/
 extern crate nalgebra_glm as glm;
 use std::{ mem, ptr, os::raw::c_void };
 use std::thread;
