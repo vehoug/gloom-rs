@@ -14,4 +14,24 @@ Make sure it works before using it to write your report.
 
 ## Code delivery
 
-To make a code archive (`source.zip`) for uploading to blackboard: run either `create_code_archive_for_blackboard_LINUX.sh` or `create_code_archive_for_blackboard_WINDOWS.bat`.
+We want the following files and folders to be delivered in a ZIP file:
+
+* `resources`
+* `shaders`
+* `src`
+* `Cargo.lock`
+* `Cargo.toml`
+
+**Important:** Do not include the `target` folder!
+
+To automatically make an archive (`source.zip`) ready for uploading to blackboard:
+
+* Make sure any extra assets or resources you have might have added are located in the `resources` folder
+* Then run either:
+	* `create_code_archive_for_blackboard_LINUX.sh`
+	* `create_code_archive_for_blackboard_WINDOWS.bat`.
+
+This script will explicitly ignore the `target` folder, and two files given as a handout for assignment 3, to save space:
+
+* `resources/helicopter.obj`
+* `resources/lunarsurface.obj`
