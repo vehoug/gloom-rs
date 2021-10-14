@@ -1,10 +1,11 @@
-// Uncomment the following crate-wide attriutes to silence warnings of "low" interest:
+// Uncomment these following global attributes to silence most warnings of "low" interest:
 /*
-#![allow(unused_mut)]
 #![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unreachable_code)]
 #![allow(non_snake_case)]
+#![allow(unreachable_code)]
+#![allow(unused_mut)]
+#![allow(unused_unsafe)]
+#![allow(unused_variables)]
 */
 extern crate nalgebra_glm as glm;
 use std::{ mem, ptr, os::raw::c_void };
@@ -21,22 +22,27 @@ const SCREEN_W: u32 = 800;
 const SCREEN_H: u32 = 600;
 
 // == // Helper functions to make interacting with OpenGL a little bit prettier. You *WILL* need these! // == //
-// The names should be pretty self explanatory
+
+// Get the size of an arbitrary array of numbers measured in bytes
+// Example usage:  pointer_to_array(my_array)
 fn byte_size_of_array<T>(val: &[T]) -> isize {
     std::mem::size_of_val(&val[..]) as isize
 }
 
 // Get the OpenGL-compatible pointer to an arbitrary array of numbers
+// Example usage:  pointer_to_array(my_array)
 fn pointer_to_array<T>(val: &[T]) -> *const c_void {
     &val[0] as *const T as *const c_void
 }
 
 // Get the size of the given type in bytes
+// Example usage:  size_of::<u64>()
 fn size_of<T>() -> i32 {
     mem::size_of::<T>() as i32
 }
 
-// Get an offset in bytes for n units of type T
+// Get an offset in bytes for n units of type T, represented as a relative pointer
+// Example usage:  offset::<u64>(4)
 fn offset<T>(n: u32) -> *const c_void {
     (n * mem::size_of::<T>() as u32) as *const T as *const c_void
 }
@@ -45,9 +51,24 @@ fn offset<T>(n: u32) -> *const c_void {
 // ptr::null()
 
 
+// == // Generate your VAO here
+unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
+    // Implement me!
 
-// == // Modify and complete the function below for the first task
-// unsafe fn FUNCTION_NAME(ARGUMENT_NAME: &Vec<f32>, ARGUMENT_NAME: &Vec<u32>) -> u32 { } 
+    // Also, feel free to delete comments :)
+
+    // This should:
+    // * Generate a VAO and bind it
+    // * Generate a VBO and bind it
+    // * Fill it with data
+    // * Configure a VAP for the data and enable it
+    // * Generate a IBO and bind it
+    // * Fill it with data
+    // * Return the ID of the VAO
+
+    0
+}
+
 
 fn main() {
     // Set up the necessary objects to deal with windows and event handling
@@ -75,7 +96,8 @@ fn main() {
 
     // Spawn a separate thread for rendering, so event handling doesn't block rendering
     let render_thread = thread::spawn(move || {
-        // Acquire the OpenGL Context and load the function pointers. This has to be done inside of the rendering thread, because
+        // Acquire the OpenGL Context and load the function pointers.
+        // This has to be done inside of the rendering thread, because
         // an active OpenGL context cannot safely traverse a thread boundary
         let context = unsafe {
             let c = windowed_context.make_current().unwrap();
@@ -100,47 +122,59 @@ fn main() {
             println!("GLSL\t: {}", util::get_gl_string(gl::SHADING_LANGUAGE_VERSION));
         }
 
-        // == // Set up your VAO here
-        unsafe {
+        // == // Set up your VAO around here
 
-        }
+        let my_vao = unsafe { 1337 };
+
+
+        // == // Set up your shaders here
 
         // Basic usage of shader helper:
-        // The example code below returns a shader object, which contains the field `.program_id`.
-        // The snippet is not enough to do the assignment, and will need to be modified (outside of
-        // just using the correct path), but it only needs to be called once
-        //
-        //     shader::ShaderBuilder::new()
-        //        .attach_file("./path/to/shader.file")
-        //        .link();
-        unsafe {
+        // The example code below creates a 'shader' object.
+        // It which contains the field `.program_id` and the method `.activate()`.
+        // The `.` in the path is relative to `Cargo.toml`.
+        // This snippet is not enough to do the assignment, and will need to be modified (outside
+        // of just using the correct path), but it only needs to be called once
 
-        }
+        /*
+        let simple_shader = unsafe {
+            shader::ShaderBuilder::new()
+                .attach_file("./path/to/simple/shader.file")
+                .link()
+        };
+        */
 
-        // Used to demonstrate keyboard handling -- feel free to remove
-        let mut _arbitrary_number = 0.0;
 
-        let first_frame_time = std::time::Instant::now();
-        let mut last_frame_time = first_frame_time;
+        // Used to demonstrate keyboard handling for assignment 2.
+        let mut _arbitrary_number = 0.0; // feel free to remove
+
+
         // The main rendering loop
+        let first_frame_time = std::time::Instant::now();
+        let mut prevous_frame_time = first_frame_time;
         loop {
+            // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
-            let delta_time = now.duration_since(last_frame_time).as_secs_f32();
-            last_frame_time = now;
+            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32();
+            prevous_frame_time = now;
 
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {
                 for key in keys.iter() {
                     match key {
+                        // The `VirtualKeyCode` enum is defined here:
+                        //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
+
                         VirtualKeyCode::A => {
                             _arbitrary_number += delta_time;
-                        },
+                        }
                         VirtualKeyCode::D => {
                             _arbitrary_number -= delta_time;
-                        },
+                        }
 
 
+                        // default handler:
                         _ => { }
                     }
                 }
@@ -148,26 +182,37 @@ fn main() {
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
             if let Ok(mut delta) = mouse_delta.lock() {
 
+                // == // Optionally access the acumulated mouse movement between
+                // == // frames here with `delta.0` and `delta.1`
 
-
-                *delta = (0.0, 0.0);
+                *delta = (0.0, 0.0); // reset when done
             }
+
+            // == // Please compute camera transforms here (assignment 2 & 3)
+
 
             unsafe {
-                gl::ClearColor(0.76862745, 0.71372549, 0.94901961, 1.0); // moon raker, full opacity
+                // Clear the color and depth buffers
+                gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky, full opacity
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-                // Issue the necessary commands to draw your scene here
 
-
+                // == // Issue the necessary gl:: commands to draw your scene here
 
 
 
             }
 
-            context.swap_buffers().unwrap();
+            // Display the new color buffer on the display
+            context.swap_buffers().unwrap(); // we use "double buffering" to avoid artifacts
         }
     });
+
+
+    // == //
+    // == // From here on down there are only internals.
+    // == //
+
 
     // Keep track of the health of the rendering thread
     let render_thread_healthy = Arc::new(RwLock::new(true));
@@ -181,7 +226,7 @@ fn main() {
         }
     });
 
-    // Start the event loop -- This is where window events get handled
+    // Start the event loop -- This is where window events are initially handled
     el.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -195,10 +240,10 @@ fn main() {
         match event {
             Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
                 *control_flow = ControlFlow::Exit;
-            },
+            }
             // Keep track of currently pressed keys to send to the rendering thread
             Event::WindowEvent { event: WindowEvent::KeyboardInput {
-                input: KeyboardInput { state: key_state, virtual_keycode: Some(keycode), .. }, .. }, .. } => {
+                    input: KeyboardInput { state: key_state, virtual_keycode: Some(keycode), .. }, .. }, .. } => {
 
                 if let Ok(mut keys) = arc_pressed_keys.lock() {
                     match key_state {
@@ -216,23 +261,19 @@ fn main() {
                     }
                 }
 
-                // Handle escape separately
+                // Handle Escape and Q keys separately
                 match keycode {
-                    Escape => {
-                        *control_flow = ControlFlow::Exit;
-                    },
-                    Q => {
-                        *control_flow = ControlFlow::Exit;
-                    }
-                    _ => { }
+                    Escape => { *control_flow = ControlFlow::Exit; }
+                    Q      => { *control_flow = ControlFlow::Exit; }
+                    _      => { }
                 }
-            },
+            }
             Event::DeviceEvent { event: DeviceEvent::MouseMotion { delta }, .. } => {
                 // Accumulate mouse movement
                 if let Ok(mut position) = arc_mouse_delta.lock() {
                     *position = (position.0 + delta.0 as f32, position.1 + delta.1 as f32);
                 }
-            },
+            }
             _ => { }
         }
     });

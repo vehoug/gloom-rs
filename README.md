@@ -3,12 +3,20 @@
 To get started, make sure you have `git`, `cargo` and, `rustc` installed and available.
 
 	git clone https://github.com/pbsds/gloom-rs
+	cd gloom-rs
+	cargo run
+
+
+## GLM
+
+We use a variant of GLM known as [nalgebra-glm](https://docs.rs/nalgebra-glm/0.15.0/nalgebra_glm/), which differs *slightly* from the standard GLM library.
+
 
 ## Report
 
 You're free to write your report any way you'd like, as long as it is delivered as a PDF file.
 
-To spread the word of *"the one true way"*, I have included a `pandoc` report skeleton in the `report` folder.
+To spread the gospel, I have included a `pandoc` report skeleton in the `report` folder.
 To use pandoc, make sure you have `pandoc` installed along with a supported latex engine.
 Make sure it works before using it to write your report.
 
