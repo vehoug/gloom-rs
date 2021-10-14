@@ -9,13 +9,20 @@ PDVARS += --highlight-style=pygments # the default theme
 
 .PHONY: help
 help:
-	@echo "try running 'make template.pdf' ;)"
+	@echo "try running 'make template.pdf'"
 
-%.pdf: %.md Makefile
+.PHONY: has-%
+has-%:
+	@command -v $* >/dev/null || ( \
+		echo "ERROR: Command '$*' not found! Make sure it is installed and available in PATH"; \
+		false; \
+	) >&2
+
+%.pdf: %.md Makefile has-pandoc
 	pandoc -i $< ${PDVARS} -o $@ #--pdf-engine=pdflatex
 
-%.tex: %.md Makefile
+%.tex: %.md Makefile has-pandoc
 	pandoc -i $< ${PDVARS} -o $@ --standalone
 
-%.html: %.md Makefile
+%.html: %.md Makefile has-pandoc
 	pandoc -i $< ${PDVARS} -o $@ --katex --standalone --self-contained
