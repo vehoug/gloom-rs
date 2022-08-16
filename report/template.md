@@ -2,7 +2,7 @@
 # This is a YAML preamble, defining pandoc meta-variables.
 # Reference: https://pandoc.org/MANUAL.html#variables
 # Change them as you see fit.
-title: TDT4195 Excercise X
+title: TDT4195 Exercise X
 author:
 - Gyrd Bannamule Gyrdsson
 - Gjavleik Britonis Podebusk
