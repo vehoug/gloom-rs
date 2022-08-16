@@ -1,7 +1,8 @@
 ---
-# These are meta-variables defined with YAML syntax, change them as you wish.
-# see https://pandoc.org/MANUAL.html#variables
-title: TDT4195 Assignment X
+# This is a YAML preamble, defining pandoc meta-variables.
+# Reference: https://pandoc.org/MANUAL.html#variables
+# Change them as you see fit.
+title: TDT4195 Excercise X
 author:
 - Gyrd Bannamule Gyrdsson
 - Gjavleik Britonis Podebusk
@@ -10,12 +11,16 @@ lang: en-US
 papersize: a4
 geometry: margin=4cm
 toc: false
-toc-title: "List of Contents"
+toc-title: "Table of Contents"
 toc-depth: 2
 numbersections: true
+header-includes:
+# The `atkinson` font, requires 'texlive-fontsextra' on arch or the 'atkinson' CTAN package
+# Uncomment this line to enable:
+#- '`\usepackage[sfdefault]{atkinson}`{=latex}'
 colorlinks: true
 links-as-notes: true
-# The document is following the break written using Markdown syntax
+# The document is following this break is written using "Markdown" syntax
 ---
 
 <!--
@@ -41,7 +46,9 @@ println!("Hello, {}", 42);
 
 [This](https://www.ntnu.no) is a link.
 [This][] is also a link. <!-- defined below -->
-This[^this_is_a_unique_footnote_label] is a footnote.
+This[^this_is_a_unique_footnote_label] is a footnote. <!-- defined below -->
+This^[Footnotes can also be written inline] is also a footnote.
+
 
 [This]: https://www.uio.no
 [^this_is_a_unique_footnote_label]: In footnotes you can write anything tangentially related.
@@ -49,13 +56,13 @@ This[^this_is_a_unique_footnote_label] is a footnote.
 * This
 * is
 * a
-* bullet
+* unordered
 * list
 
 1. This
 1. is
 1. a
-1. numbered
+1. ordered
 1. list
     a. with
     a. sub
@@ -65,7 +72,7 @@ This[^this_is_a_unique_footnote_label] is a footnote.
 
 This is still on the first page
 
-\clearpage
+`\clearpage`{=latex}
 
 <!--
 Above is a raw LaTeX statement.
@@ -74,9 +81,9 @@ Those are included when exporting to LaTeX or PDF, and ignored when exporting to
 
 This is on the second page
 
-i) Yo
-i) Yo
-i) Yo
+i) Roman ordered list
+i) Roman ordered list
+i) Roman ordered list
 
 This
 : is a definition
@@ -84,12 +91,14 @@ This
 > this is a
 block quote
 
-This is a paragraph with inline \LaTeX\ math: $\frac{1}{2}$.
-Below is a math block:
+
+This is a paragraph with _inline_ \LaTeX\ style math: $\frac{1}{2}$.
+Below is a math _block_:
 
 $$
     \int_{a}^{b} f(x)dx
 $$
+
 
 | This | is  | a   | table |
 | ---- | --- | --- | ----- |
@@ -98,13 +107,14 @@ $$
 
 : This is a table caption
 
-This is an inline image with set height:
+This is an inline image with a fixed height:
 ![](images/logo.png){height=5em}
 
-Below is a figure (i.e. an image with a caption).
+Below is a _figure_ (i.e. an image with a caption).
 It floats and may as a result move to a different page depending on the layout.
-Use the `pandoc-crossref` filter to reference figures, tables and equations.
 
 ![
     Image with caption
 ](images/logo.png)
+
+Enable and use the `pandoc-crossref` filter to reference figures, tables and equations.

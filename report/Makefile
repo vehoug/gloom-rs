@@ -1,11 +1,14 @@
-PDVARS += --verbose
-PDVARS += --highlight-style=pygments # the default theme
+PANDOC_ARGS += --verbose
+PANDOC_ARGS += --highlight-style=pygments # the default theme
 
-# Optional filters, must be installed to use:
-#PDVARS += --filter pandoc-include
-#PDVARS += --filter pandoc-codeblock-include
-#PDVARS += --filter pandoc-imagine
-#PDVARS += --filter pandoc-crossref
+# Optional filters, needs be installed seperately:
+
+#PANDOC_ARGS += --filter pandoc-include
+#PANDOC_ARGS += --filter pandoc-include-code
+#PANDOC_ARGS += --filter pandoc-imagine
+#PANDOC_ARGS += --filter pandoc-crossref
+#PANDOC_ARGS += --filter include-files.lua      # this only works in the nix environment
+#PANDOC_ARGS += --filter include-code-files.lua # this only works in the nix environment
 
 .PHONY: help
 help:
@@ -18,11 +21,11 @@ has-%:
 		false; \
 	) >&2
 
-%.pdf: %.md Makefile has-pandoc
-	pandoc -i $< ${PDVARS} -o $@ #--pdf-engine=pdflatex
+%.pdf: %.md Makefile | has-pandoc
+	pandoc -i $< ${PANDOC_ARGS} -o $@ #--pdf-engine=pdflatex
 
-%.tex: %.md Makefile has-pandoc
-	pandoc -i $< ${PDVARS} -o $@ --standalone
+%.tex: %.md Makefile | has-pandoc
+	pandoc -i $< ${PANDOC_ARGS} -o $@ --standalone
 
-%.html: %.md Makefile has-pandoc
-	pandoc -i $< ${PDVARS} -o $@ --katex --standalone --self-contained
+%.html: %.md Makefile | has-pandoc
+	pandoc -i $< ${PANDOC_ARGS} -o $@ --katex --standalone --self-contained
