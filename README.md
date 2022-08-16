@@ -39,7 +39,7 @@ To automatically make an archive (`source.zip`) ready for uploading to blackboar
 	* `create_code_archive_for_blackboard_LINUX.sh`
 	* `create_code_archive_for_blackboard_WINDOWS.bat`.
 
-This script will explicitly ignore the `target` folder, and two files given as a handout for assignment 3, to save space:
+This script will explicitly ignore the `target` folder, and two files given as a handout for excercise 3, to save space:
 
 * `resources/helicopter.obj`
 * `resources/lunarsurface.obj`

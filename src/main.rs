@@ -133,7 +133,7 @@ fn main() {
         // The example code below creates a 'shader' object.
         // It which contains the field `.program_id` and the method `.activate()`.
         // The `.` in the path is relative to `Cargo.toml`.
-        // This snippet is not enough to do the assignment, and will need to be modified (outside
+        // This snippet is not enough to do the excercise, and will need to be modified (outside
         // of just using the correct path), but it only needs to be called once
 
         /*
@@ -145,7 +145,7 @@ fn main() {
         */
 
 
-        // Used to demonstrate keyboard handling for assignment 2.
+        // Used to demonstrate keyboard handling for excercise 2.
         let mut _arbitrary_number = 0.0; // feel free to remove
 
 
@@ -188,7 +188,7 @@ fn main() {
                 *delta = (0.0, 0.0); // reset when done
             }
 
-            // == // Please compute camera transforms here (assignment 2 & 3)
+            // == // Please compute camera transforms here (excercise 2 & 3)
 
 
             unsafe {
