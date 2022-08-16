@@ -18,8 +18,9 @@ mod util;
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
 
-const SCREEN_W: u32 = 800;
-const SCREEN_H: u32 = 600;
+// initial window size
+const INITIAL_SCREEN_W: u32 = 800;
+const INITIAL_SCREEN_H: u32 = 600;
 
 // == // Helper functions to make interacting with OpenGL a little bit prettier. You *WILL* need these! // == //
 
@@ -75,8 +76,8 @@ fn main() {
     let el = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new()
         .with_title("Gloom-rs")
-        .with_resizable(false)
-        .with_inner_size(glutin::dpi::LogicalSize::new(SCREEN_W, SCREEN_H));
+        .with_resizable(true)
+        .with_inner_size(glutin::dpi::LogicalSize::new(INITIAL_SCREEN_W, INITIAL_SCREEN_H));
     let cb = glutin::ContextBuilder::new()
         .with_vsync(true);
     let windowed_context = cb.build_windowed(wb, &el).unwrap();
@@ -94,6 +95,11 @@ fn main() {
     // Make a reference of this tuple to send to the render thread
     let mouse_delta = Arc::clone(&arc_mouse_delta);
 
+    // Set up shared tuple for tracking changes to the window size
+    let arc_window_size = Arc::new(Mutex::new((INITIAL_SCREEN_W, INITIAL_SCREEN_H, false)));
+    // Make a reference of this tuple to send to the render thread
+    let window_size = Arc::clone(&arc_window_size);
+
     // Spawn a separate thread for rendering, so event handling doesn't block rendering
     let render_thread = thread::spawn(move || {
         // Acquire the OpenGL Context and load the function pointers.
@@ -104,6 +110,8 @@ fn main() {
             gl::load_with(|symbol| c.get_proc_address(symbol) as *const _);
             c
         };
+
+        let mut window_aspect_ratio = INITIAL_SCREEN_W as f32 / INITIAL_SCREEN_H as f32;
 
         // Set up openGL
         unsafe {
@@ -158,6 +166,15 @@ fn main() {
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
             let delta_time = now.duration_since(prevous_frame_time).as_secs_f32();
             prevous_frame_time = now;
+
+            // Handle resize events
+            if let Ok(mut new_size) = window_size.lock() && new_size.2 {
+                context.resize(glutin::dpi::PhysicalSize::new(new_size.0, new_size.1));
+                window_aspect_ratio = new_size.0 as f32 / new_size.1 as f32;
+                (*new_size).2 = false;
+                println!("Resized");
+                unsafe { gl::Viewport(0, 0, new_size.0 as i32, new_size.1 as i32); }
+            }
 
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {
@@ -238,6 +255,12 @@ fn main() {
         }
 
         match event {
+            Event::WindowEvent { event: WindowEvent::Resized(physical_size), .. } => {
+                println!("New window size! width: {}, height: {}", physical_size.width, physical_size.height);
+                if let Ok(mut new_size) = arc_window_size.lock() {
+                    *new_size = (physical_size.width, physical_size.height, true);
+                }
+            }
             Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
                 *control_flow = ControlFlow::Exit;
             }
