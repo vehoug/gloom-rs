@@ -35,12 +35,12 @@ We want the following files and folders to be delivered in a ZIP file:
 
 To automatically make an archive (`source.zip`) ready for uploading to blackboard:
 
-* Make sure any extra assets or resources you have might have added are located in the `resources` folder
+* Make sure any extra assets or resources you might have added are located in the `resources` folder
 * Then run either:
-	* `create_code_archive_for_blackboard_LINUX.sh`
+	* `./create_code_archive_for_blackboard_LINUX.sh`
 	* `create_code_archive_for_blackboard_WINDOWS.bat`.
 
-This script will explicitly ignore the `target` folder, and two files given as a handout for exercise 3, to save space:
+This zip script will explicitly ignore the `target` folder, and the following two of the files given as a handout for exercise 3 (just to save space):
 
 * `resources/helicopter.obj`
 * `resources/lunarsurface.obj`

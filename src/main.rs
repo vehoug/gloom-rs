@@ -159,13 +159,13 @@ fn main() {
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
-        let mut prevous_frame_time = first_frame_time;
+        let mut previous_frame_time = first_frame_time;
         loop {
             // Compute time passed since the previous frame and since the start of the program
             let now = std::time::Instant::now();
             let elapsed = now.duration_since(first_frame_time).as_secs_f32();
-            let delta_time = now.duration_since(prevous_frame_time).as_secs_f32();
-            prevous_frame_time = now;
+            let delta_time = now.duration_since(previous_frame_time).as_secs_f32();
+            previous_frame_time = now;
 
             // Handle resize events
             if let Ok(mut new_size) = window_size.lock() {
@@ -201,7 +201,7 @@ fn main() {
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
             if let Ok(mut delta) = mouse_delta.lock() {
 
-                // == // Optionally access the acumulated mouse movement between
+                // == // Optionally access the accumulated mouse movement between
                 // == // frames here with `delta.0` and `delta.1`
 
                 *delta = (0.0, 0.0); // reset when done
