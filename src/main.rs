@@ -173,7 +173,7 @@ fn main() {
                     context.resize(glutin::dpi::PhysicalSize::new(new_size.0, new_size.1));
                     window_aspect_ratio = new_size.0 as f32 / new_size.1 as f32;
                     (*new_size).2 = false;
-                    println!("Resized");
+                    println!("Window was resized to {}x{}", new_size.0, new_size.1);
                     unsafe { gl::Viewport(0, 0, new_size.0 as i32, new_size.1 as i32); }
                 }
             }
@@ -258,7 +258,7 @@ fn main() {
 
         match event {
             Event::WindowEvent { event: WindowEvent::Resized(physical_size), .. } => {
-                println!("New window size! width: {}, height: {}", physical_size.width, physical_size.height);
+                println!("New window size received: {}x{}", physical_size.width, physical_size.height);
                 if let Ok(mut new_size) = arc_window_size.lock() {
                     *new_size = (physical_size.width, physical_size.height, true);
                 }
