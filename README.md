@@ -4,7 +4,6 @@ To get started, make sure you have `git`, `cargo` and, `rustc` installed and ava
 
 	git clone https://github.com/pbsds/gloom-rs
 	cd gloom-rs
-	rustup override set nightly
 	cargo run
 
 
