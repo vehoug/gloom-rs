@@ -1,7 +1,7 @@
 PANDOC_ARGS += --verbose
 PANDOC_ARGS += --highlight-style=pygments # the default theme
 
-# Optional filters, needs be installed seperately:
+# Optional filters, needs be installed separately:
 
 #PANDOC_ARGS += --filter pandoc-include
 #PANDOC_ARGS += --filter pandoc-include-code

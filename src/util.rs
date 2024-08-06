@@ -5,7 +5,7 @@ pub unsafe fn get_gl_string(name: gl::types::GLenum) -> String {
     std::ffi::CStr::from_ptr(gl::GetString(name) as *mut libc::c_char).to_string_lossy().to_string()
 }
 
-// Debug callback to panic upon enountering any OpenGL error
+// Debug callback to panic upon encountering any OpenGL error
 pub extern "system" fn debug_callback(
     source: u32, e_type: u32, id: u32,
     severity: u32, _length: i32,
