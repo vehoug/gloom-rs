@@ -30,4 +30,3 @@ pub extern "system" fn debug_callback(
         }
     }
 }
-
