@@ -20,6 +20,16 @@ To spread the gospel, I have included a `pandoc` report skeleton in the `report`
 To use pandoc, make sure you have `pandoc` installed along with a supported latex engine.
 Make sure it works before using it to write your report.
 
+## Cybele
+
+If you're using the lab computers in Cybele, you will be using a network-mounted home directory which is subject to both low quotas and high latency.
+To speed up your work we highly reccomend running the following, to put the build directory in RAM rather than on disk:
+
+```shell
+test -d target/ && rm -rf target/
+ln -s /dev/shm target
+```
+
 ## Code delivery
 
 We want the following files and folders to be delivered in a ZIP file:
