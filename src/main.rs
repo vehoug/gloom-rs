@@ -157,7 +157,26 @@ fn main() {
 
         // == // Set up your VAO around here
 
-        let my_vao = unsafe { 1337 };
+        // Define vertex data for five distinct triangles
+        let vertices: &Vec<f32> = &vec![
+            -0.1, -0.1, 0.0,   0.1, -0.1, 0.0,   0.0, 0.1, 0.0,
+            -0.7, -0.1, 0.0,  -0.5, -0.1, 0.0,  -0.6, 0.1, 0.0,
+             0.5, -0.1, 0.0,   0.7, -0.1, 0.0,   0.6, 0.1, 0.0,
+            -0.1,  0.4, 0.0,   0.1,  0.4, 0.0,   0.0, 0.6, 0.0,
+            -0.1, -0.6, 0.0,   0.1, -0.6, 0.0,   0.0, -0.4, 0.0
+        ];
+
+        // Define index data for five distinct triangles
+        let indices: &Vec<u32> = &vec![
+            0, 1, 2,
+            3, 4, 5,
+            6, 7, 8,
+            9, 10, 11,
+            12, 13, 14
+        ];
+
+        // Create single VAO containing all triangles
+        let vao = unsafe { create_vao(vertices, indices) };
 
 
         // == // Set up your shaders here
@@ -244,10 +263,17 @@ fn main() {
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-
                 // == // Issue the necessary gl:: commands to draw your scene here
-
-
+                
+                // Activate the shader program
+                simple_shader.activate();
+                
+                // Bind the VAO containing five triangles
+                gl::BindVertexArray(vao);
+                
+                // Draw all five triangles from VAO
+                gl::DrawElements(gl::TRIANGLES, 15, gl::UNSIGNED_INT, std::ptr::null());
+                
 
             }
 
