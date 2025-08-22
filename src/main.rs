@@ -169,13 +169,17 @@ fn main() {
         // This snippet is not enough to do the exercise, and will need to be modified (outside
         // of just using the correct path), but it only needs to be called once
 
-        /*
+        // Define relative paths to the simple shader files
+        let vertex_shader_path: &str = "./shaders/simple.vert";
+        let fragment_shader_path: &str = "./shaders/simple.frag";
+
+        // Create the simple shader object
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
-                .attach_file("./path/to/simple/shader.file")
+                .attach_file(vertex_shader_path)
+                .attach_file(fragment_shader_path)
                 .link()
         };
-        */
 
 
         // Used to demonstrate keyboard handling for exercise 2.
