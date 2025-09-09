@@ -52,22 +52,47 @@ fn offset<T>(n: u32) -> *const c_void {
 // ptr::null()
 
 
-// == // Generate your VAO here
+// Generate a Vertex Array Object (VAO) and return its ID
 unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
-    // Implement me!
+    let entry_size: i32 = 3;
 
-    // Also, feel free to delete comments :)
+    // Create and bind the VAO
+    let mut array_id: u32 = 0;
+    gl::GenVertexArrays(1, &mut array_id);
+    gl::BindVertexArray(array_id);
 
-    // This should:
-    // * Generate a VAO and bind it
-    // * Generate a VBO and bind it
-    // * Fill it with data
-    // * Configure a VAP for the data and enable it
-    // * Generate a IBO and bind it
-    // * Fill it with data
-    // * Return the ID of the VAO
+    // Create and bind the Vertex Buffer Object (VBO) before
+    // filling it with vertex data
+    let mut vertex_buffer_id: u32 = 0;
+    gl::GenBuffers(1, &mut vertex_buffer_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer_id);
+    gl::BufferData(gl::ARRAY_BUFFER, 
+                   byte_size_of_array(vertices), 
+                   pointer_to_array(vertices), 
+                   gl::STATIC_DRAW);
 
-    0
+
+    // Set the Vertex Attribute Pointer and enable it
+    let vap_index: u32 = 0;
+    gl::VertexAttribPointer(vap_index, 
+                            entry_size, 
+                            gl::FLOAT, 
+                            gl::FALSE, 
+                            entry_size * size_of::<f32>(), 
+                            std::ptr::null());
+    gl::EnableVertexAttribArray(vap_index);
+
+    // Create and bind the Index Buffer before filling it with index data
+    let mut index_buffer_id: u32 = 0;
+    gl::GenBuffers(1, &mut index_buffer_id);
+    gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, index_buffer_id);
+    gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, 
+                   byte_size_of_array(indices), 
+                   pointer_to_array(indices), 
+                   gl::STATIC_DRAW);
+
+    // Return the VAO ID
+    array_id
 }
 
 
@@ -132,7 +157,26 @@ fn main() {
 
         // == // Set up your VAO around here
 
-        let my_vao = unsafe { 1337 };
+        // Define vertex data for five distinct triangles
+        let vertices: &Vec<f32> = &vec![
+            -0.1, -0.1, 0.0,   0.1, -0.1, 0.0,   0.0, 0.1, 0.0,
+            -0.7, -0.1, 0.0,  -0.5, -0.1, 0.0,  -0.6, 0.1, 0.0,
+             0.5, -0.1, 0.0,   0.7, -0.1, 0.0,   0.6, 0.1, 0.0,
+            -0.1,  0.4, 0.0,   0.1,  0.4, 0.0,   0.0, 0.6, 0.0,
+            -0.1, -0.6, 0.0,   0.1, -0.6, 0.0,   0.0, -0.4, 0.0
+        ];
+
+        // Define index data for five distinct triangles
+        let indices: &Vec<u32> = &vec![
+            0, 1, 2,
+            3, 4, 5,
+            6, 7, 8,
+            9, 10, 11,
+            12, 13, 14
+        ];
+
+        // Create single VAO containing all triangles
+        let vao = unsafe { create_vao(vertices, indices) };
 
 
         // == // Set up your shaders here
@@ -144,13 +188,17 @@ fn main() {
         // This snippet is not enough to do the exercise, and will need to be modified (outside
         // of just using the correct path), but it only needs to be called once
 
-        /*
+        // Define relative paths to the simple shader files
+        let vertex_shader_path: &str = "./shaders/simple.vert";
+        let fragment_shader_path: &str = "./shaders/simple.frag";
+
+        // Create the simple shader object
         let simple_shader = unsafe {
             shader::ShaderBuilder::new()
-                .attach_file("./path/to/simple/shader.file")
+                .attach_file(vertex_shader_path)
+                .attach_file(fragment_shader_path)
                 .link()
         };
-        */
 
 
         // Used to demonstrate keyboard handling for exercise 2.
@@ -215,10 +263,17 @@ fn main() {
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-
                 // == // Issue the necessary gl:: commands to draw your scene here
-
-
+                
+                // Activate the shader program
+                simple_shader.activate();
+                
+                // Bind the VAO containing five triangles
+                gl::BindVertexArray(vao);
+                
+                // Draw all five triangles from VAO
+                gl::DrawElements(gl::TRIANGLES, 15, gl::UNSIGNED_INT, std::ptr::null());
+                
 
             }
 
