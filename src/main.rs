@@ -218,6 +218,8 @@ fn main() {
         // Used to demonstrate keyboard handling for exercise 2.
         let mut _arbitrary_number = 0.0; // feel free to remove
 
+        let mut oscillator: f32 = 0.0;
+
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
@@ -281,6 +283,10 @@ fn main() {
                 
                 // Activate the shader program
                 simple_shader.activate();
+
+                // Update uniform in vertex shader
+                oscillator = elapsed.sin();
+                gl::Uniform1f(2, oscillator);
                 
                 // Bind the VAO containing five triangles
                 gl::BindVertexArray(vao);
