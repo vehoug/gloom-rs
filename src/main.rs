@@ -53,16 +53,16 @@ fn offset<T>(n: u32) -> *const c_void {
 
 
 // Generate a Vertex Array Object (VAO) and return its ID
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
-    let entry_size: i32 = 3;
+unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>) -> u32 {
+    let pos_entry_size: i32 = 3;
+    let color_entry_size: i32 = 4;
 
     // Create and bind the VAO
     let mut array_id: u32 = 0;
     gl::GenVertexArrays(1, &mut array_id);
     gl::BindVertexArray(array_id);
 
-    // Create and bind the Vertex Buffer Object (VBO) before
-    // filling it with vertex data
+    // Create and bind position VBO and fill with vertex position data
     let mut vertex_buffer_id: u32 = 0;
     gl::GenBuffers(1, &mut vertex_buffer_id);
     gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer_id);
@@ -70,17 +70,36 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>) -> u32 {
                    byte_size_of_array(vertices), 
                    pointer_to_array(vertices), 
                    gl::STATIC_DRAW);
-
-
-    // Set the Vertex Attribute Pointer and enable it
-    let vap_index: u32 = 0;
-    gl::VertexAttribPointer(vap_index, 
-                            entry_size, 
+    
+    // Set the Vertex Attribute Pointer for positions and enable it
+    let vert_attrib_index: u32 = 0;
+    gl::VertexAttribPointer(vert_attrib_index, 
+                            pos_entry_size, 
                             gl::FLOAT, 
                             gl::FALSE, 
-                            entry_size * size_of::<f32>(), 
+                            pos_entry_size * size_of::<f32>(), 
                             std::ptr::null());
-    gl::EnableVertexAttribArray(vap_index);
+    gl::EnableVertexAttribArray(vert_attrib_index);
+
+    // Create and bind color VBO and fill with vertex color data
+    let mut color_buffer_id: u32 = 0;
+    gl::GenBuffers(1, &mut color_buffer_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, color_buffer_id);
+    gl::BufferData(gl::ARRAY_BUFFER,
+                   byte_size_of_array(colors),
+                   pointer_to_array(colors),
+                   gl::STATIC_DRAW);
+
+
+    // Set the Vertex Attribute Pointer for colors and enable it
+    let color_attrib_index: u32 = 1;
+    gl::VertexAttribPointer(color_attrib_index, 
+                            color_entry_size, 
+                            gl::FLOAT, 
+                            gl::FALSE, 
+                            color_entry_size * size_of::<f32>(), 
+                            std::ptr::null());
+    gl::EnableVertexAttribArray(color_attrib_index);
 
     // Create and bind the Index Buffer before filling it with index data
     let mut index_buffer_id: u32 = 0;
@@ -157,36 +176,31 @@ fn main() {
 
         // == // Set up your VAO around here
 
-        // Define vertex data for five distinct triangles
+        // Define vertex data for triangles
         let vertices: &Vec<f32> = &vec![
-            -0.1, -0.1, 0.0,   0.1, -0.1, 0.0,   0.0, 0.1, 0.0,
             -0.7, -0.1, 0.0,  -0.5, -0.1, 0.0,  -0.6, 0.1, 0.0,
              0.5, -0.1, 0.0,   0.7, -0.1, 0.0,   0.6, 0.1, 0.0,
             -0.1,  0.4, 0.0,   0.1,  0.4, 0.0,   0.0, 0.6, 0.0,
             -0.1, -0.6, 0.0,   0.1, -0.6, 0.0,   0.0, -0.4, 0.0
         ];
 
-        // Define index data for five distinct triangles
+        let colors: &Vec<f32> = &vec![
+            1.0, 0.0, 0.0, 1.0,   0.0, 1.0, 0.0, 1.0,   0.0, 0.0, 1.0, 1.0,
+            1.0, 1.0, 0.0, 0.9,   0.0, 1.0, 1.0, 0.9,   1.0, 0.0, 1.0, 0.9,
+            1.0, 0.5, 0.5, 0.8,   0.5, 1.0, 0.5, 0.8,   0.5, 0.5, 1.0, 0.8,
+            1.0, 1.0, 1.0, 0.7,   0.5, 0.5, 0.5, 0.7,   0.2, 0.2, 0.2, 0.7
+        ];
+
+        // Define index data for triangles
         let indices: &Vec<u32> = &vec![
             0, 1, 2,
             3, 4, 5,
             6, 7, 8,
-            9, 10, 11,
-            12, 13, 14
+            9, 10, 11
         ];
 
         // Create single VAO containing all triangles
-        let vao = unsafe { create_vao(vertices, indices) };
-
-
-        // == // Set up your shaders here
-
-        // Basic usage of shader helper:
-        // The example code below creates a 'shader' object.
-        // It which contains the field `.program_id` and the method `.activate()`.
-        // The `.` in the path is relative to `Cargo.toml`.
-        // This snippet is not enough to do the exercise, and will need to be modified (outside
-        // of just using the correct path), but it only needs to be called once
+        let vao = unsafe { create_vao(vertices, indices, colors) };
 
         // Define relative paths to the simple shader files
         let vertex_shader_path: &str = "./shaders/simple.vert";
@@ -203,6 +217,8 @@ fn main() {
 
         // Used to demonstrate keyboard handling for exercise 2.
         let mut _arbitrary_number = 0.0; // feel free to remove
+
+        let mut oscillator: f32 = 0.0;
 
 
         // The main rendering loop
@@ -267,6 +283,10 @@ fn main() {
                 
                 // Activate the shader program
                 simple_shader.activate();
+
+                // Update uniform in vertex shader
+                oscillator = elapsed.sin();
+                gl::Uniform1f(2, oscillator);
                 
                 // Bind the VAO containing five triangles
                 gl::BindVertexArray(vao);
