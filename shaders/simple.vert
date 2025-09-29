@@ -5,13 +5,7 @@ in layout(location = 1) vec4 color;
 
 out vec4 vert_color;
 
-uniform layout(location = 2) float a;
-
-// Note: Column-major order
-mat4x4 transform = {{1, a, 0, 0}, 
-                    {0, 1, 0, 0}, 
-                    {0, 0, 1, 0}, 
-                    {0, 0, 0, 1}};
+uniform mat4 transform;
 
 void main()
 {
