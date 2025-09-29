@@ -214,12 +214,13 @@ fn main() {
                 .link()
         };
 
+        let mut camera_pose: Vec<f32> = vec![
+            0.0, 0.0, 0.0,  // Position: x, y, z
+            0.0, 0.0        // Rotation: pitch, yaw
+        ];
 
         // Used to demonstrate keyboard handling for exercise 2.
         let mut _arbitrary_number = 0.0; // feel free to remove
-
-        let mut oscillator: f32 = 0.0;
-
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
@@ -250,12 +251,35 @@ fn main() {
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
                         VirtualKeyCode::A => {
-                            _arbitrary_number += delta_time;
+                            camera_pose[0] += 1.0 * delta_time;
                         }
                         VirtualKeyCode::D => {
-                            _arbitrary_number -= delta_time;
+                            camera_pose[0] -= 1.0 * delta_time;
                         }
-
+                        VirtualKeyCode::W => {
+                            camera_pose[2] += 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::S => {
+                            camera_pose[2] -= 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::Space => {
+                            camera_pose[1] += 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::LShift => {
+                            camera_pose[1] -= 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::Right => {
+                            camera_pose[3] += 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::Left => {
+                            camera_pose[3] -= 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::Down => {
+                            camera_pose[4] += 1.0 * delta_time;
+                        }
+                        VirtualKeyCode::Up => {
+                            camera_pose[4] -= 1.0 * delta_time;
+                        }
 
                         // default handler:
                         _ => { }
@@ -272,27 +296,41 @@ fn main() {
             }
 
             // == // Please compute camera transforms here (exercise 2 & 3)
+            let fov_y: f32 = 70.0;
+            
+            let mut transform: glm::Mat4 = glm::identity();
 
+            let translate_z: glm::Mat4 = glm::translation(&glm::vec3(0.0, 0.0, -2.0));
+
+            let camera_translate: glm::Mat4 = glm::translation(&glm::vec3(camera_pose[0], 
+                                                                          camera_pose[1],  
+                                                                          camera_pose[2]));
+
+            let camera_rotate: glm::Mat4 = glm::rotation(-camera_pose[3], &glm::vec3(0.0, 1.0, 0.0))
+                                         * glm::rotation(-camera_pose[4], &glm::vec3(1.0, 0.0, 0.0));
+
+            let projection: glm::Mat4 = glm::perspective(window_aspect_ratio, fov_y.to_radians(), 1.0, 100.0);
+
+            transform = projection * translate_z * camera_rotate * camera_translate * transform;
 
             unsafe {
                 // Clear the color and depth buffers
                 gl::ClearColor(0.035, 0.046, 0.078, 1.0); // night sky
                 gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-                // == // Issue the necessary gl:: commands to draw your scene here
-                
                 // Activate the shader program
                 simple_shader.activate();
 
-                // Update uniform in vertex shader
-                oscillator = elapsed.sin();
-                gl::Uniform1f(2, oscillator);
+                // == // Issue the necessary gl:: commands to draw your scene here
+
+                let location = simple_shader.get_uniform_location("transform");
+                gl::UniformMatrix4fv(location, 1, gl::FALSE, transform.as_ptr());
                 
                 // Bind the VAO containing five triangles
                 gl::BindVertexArray(vao);
                 
-                // Draw all five triangles from VAO
-                gl::DrawElements(gl::TRIANGLES, 15, gl::UNSIGNED_INT, std::ptr::null());
+                // Draw all triangles from VAO
+                gl::DrawElements(gl::TRIANGLES, 12, gl::UNSIGNED_INT, std::ptr::null());
                 
 
             }
