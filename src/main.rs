@@ -214,13 +214,11 @@ fn main() {
                 .link()
         };
 
+        // Initialize camera pose: position (x, y, z) and rotation (pitch, yaw) w/o roll
         let mut camera_pose: Vec<f32> = vec![
             0.0, 0.0, 0.0,  // Position: x, y, z
             0.0, 0.0        // Rotation: pitch, yaw
         ];
-
-        // Used to demonstrate keyboard handling for exercise 2.
-        let mut _arbitrary_number = 0.0; // feel free to remove
 
         // The main rendering loop
         let first_frame_time = std::time::Instant::now();
@@ -251,16 +249,16 @@ fn main() {
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
                         VirtualKeyCode::A => {
-                            camera_pose[0] += 1.0 * delta_time;
-                        }
-                        VirtualKeyCode::D => {
                             camera_pose[0] -= 1.0 * delta_time;
                         }
+                        VirtualKeyCode::D => {
+                            camera_pose[0] += 1.0 * delta_time;
+                        }
                         VirtualKeyCode::W => {
-                            camera_pose[2] += 1.0 * delta_time;
+                            camera_pose[2] -= 1.0 * delta_time;
                         }
                         VirtualKeyCode::S => {
-                            camera_pose[2] -= 1.0 * delta_time;
+                            camera_pose[2] += 1.0 * delta_time;
                         }
                         VirtualKeyCode::Space => {
                             camera_pose[1] += 1.0 * delta_time;
@@ -296,22 +294,31 @@ fn main() {
             }
 
             // == // Please compute camera transforms here (exercise 2 & 3)
-            let fov_y: f32 = 70.0;
             
+            // FOV in the y-direction
+            let fov_y: f32 = 75.0;
+            
+            // Initialize transformation matrix as identity each frame
             let mut transform: glm::Mat4 = glm::identity();
 
+            // Translate the scene in the -z direction to move it into the view frustum
             let translate_z: glm::Mat4 = glm::translation(&glm::vec3(0.0, 0.0, -2.0));
 
-            let camera_translate: glm::Mat4 = glm::translation(&glm::vec3(camera_pose[0], 
-                                                                          camera_pose[1],  
-                                                                          camera_pose[2]));
+            // Compute camera translation and rotation from keyboard inputs
+            let camera_translate: glm::Mat4 = glm::translation(&glm::vec3(-camera_pose[0], 
+                                                                          -camera_pose[1],  
+                                                                          -camera_pose[2]));
 
             let camera_rotate: glm::Mat4 = glm::rotation(-camera_pose[3], &glm::vec3(0.0, 1.0, 0.0))
                                          * glm::rotation(-camera_pose[4], &glm::vec3(1.0, 0.0, 0.0));
 
-            let projection: glm::Mat4 = glm::perspective(window_aspect_ratio, fov_y.to_radians(), 1.0, 100.0);
+            // Compute the perspective projection matrix
+            let projection: glm::Mat4 = glm::perspective(window_aspect_ratio, 
+                                                           fov_y.to_radians(), 
+                                                           1.0, 100.0);
 
-            transform = projection * translate_z * camera_rotate * camera_translate * transform;
+            // Compute final transformation with matrix multiplication
+            transform = projection * camera_rotate * camera_translate * translate_z * transform;
 
             unsafe {
                 // Clear the color and depth buffers
@@ -323,6 +330,7 @@ fn main() {
 
                 // == // Issue the necessary gl:: commands to draw your scene here
 
+                // Upload transformation matrix to the vertex shader
                 let location = simple_shader.get_uniform_location("transform");
                 gl::UniformMatrix4fv(location, 1, gl::FALSE, transform.as_ptr());
                 
