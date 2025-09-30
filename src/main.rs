@@ -53,9 +53,10 @@ fn offset<T>(n: u32) -> *const c_void {
 
 
 // Generate a Vertex Array Object (VAO) and return its ID
-unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>) -> u32 {
+unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>, normals: &Vec<f32>) -> u32 {
     let pos_entry_size: i32 = 3;
     let color_entry_size: i32 = 4;
+    let normal_entry_size: i32 = 3;
 
     // Create and bind the VAO
     let mut array_id: u32 = 0;
@@ -90,7 +91,6 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>)
                    pointer_to_array(colors),
                    gl::STATIC_DRAW);
 
-
     // Set the Vertex Attribute Pointer for colors and enable it
     let color_attrib_index: u32 = 1;
     gl::VertexAttribPointer(color_attrib_index, 
@@ -100,6 +100,25 @@ unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>)
                             color_entry_size * size_of::<f32>(), 
                             std::ptr::null());
     gl::EnableVertexAttribArray(color_attrib_index);
+
+    // Create and bind normal VBO and fill with vertex normal data
+    let mut normal_buffer_id: u32 = 0;
+    gl::GenBuffers(1, &mut normal_buffer_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, normal_buffer_id);
+    gl::BufferData(gl::ARRAY_BUFFER,
+                   byte_size_of_array(normals),
+                   pointer_to_array(normals),
+                   gl::STATIC_DRAW);
+
+    // Set the Vertex Attribute Pointer for normals and enable it
+    let normal_attrib_index: u32 = 2;
+    gl::VertexAttribPointer(normal_attrib_index, 
+                            normal_entry_size, 
+                            gl::FLOAT, 
+                            gl::FALSE, 
+                            normal_entry_size * size_of::<f32>(), 
+                            std::ptr::null());
+    gl::EnableVertexAttribArray(normal_attrib_index);
 
     // Create and bind the Index Buffer before filling it with index data
     let mut index_buffer_id: u32 = 0;
