@@ -14,6 +14,7 @@ use std::sync::{Mutex, Arc, RwLock};
 
 mod shader;
 mod util;
+mod mesh;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
@@ -219,11 +220,24 @@ fn main() {
         ];
 
         // Create single VAO containing all triangles
-        let vao = unsafe { create_vao(vertices, indices, colors) };
+        // let vao = unsafe { create_vao(vertices, indices, colors) };
 
         // Define relative paths to the simple shader files
         let vertex_shader_path: &str = "./shaders/simple.vert";
         let fragment_shader_path: &str = "./shaders/simple.frag";
+
+        // Define relative paths to the model files
+        let lunar_surface_path: &str = "./resources/lunarsurface.obj";
+        let helicopter_path: &str = "./resources/helicopter.obj";
+
+        // Load the lunar surface model mesh 
+        let lunar_surface = mesh::Terrain::load(lunar_surface_path);
+
+        let vao = unsafe { create_vao(&lunar_surface.vertices, 
+                                           &lunar_surface.indices, 
+                                           &lunar_surface.colors,
+                                           &lunar_surface.normals) 
+        };
 
         // Create the simple shader object
         let simple_shader = unsafe {
@@ -334,7 +348,7 @@ fn main() {
             // Compute the perspective projection matrix
             let projection: glm::Mat4 = glm::perspective(window_aspect_ratio, 
                                                            fov_y.to_radians(), 
-                                                           1.0, 100.0);
+                                                           1.0, 1000.0);
 
             // Compute final transformation with matrix multiplication
             transform = projection * camera_rotate * camera_translate * translate_z * transform;
@@ -353,11 +367,10 @@ fn main() {
                 let location = simple_shader.get_uniform_location("transform");
                 gl::UniformMatrix4fv(location, 1, gl::FALSE, transform.as_ptr());
                 
-                // Bind the VAO containing five triangles
                 gl::BindVertexArray(vao);
                 
                 // Draw all triangles from VAO
-                gl::DrawElements(gl::TRIANGLES, 12, gl::UNSIGNED_INT, std::ptr::null());
+                gl::DrawElements(gl::TRIANGLES, lunar_surface.indices.len() as i32, gl::UNSIGNED_INT, std::ptr::null());
                 
 
             }
