@@ -7,11 +7,12 @@ in layout(location = 2) vec3 normal;
 out vec4 vert_color;
 out vec3 vert_normal;
 
-uniform mat4 transform;
+uniform mat4 mvp_matrix;
+uniform mat4 model_matrix;
 
 void main()
 {
-    gl_Position = transform * vec4(position, 1.0f);
+    gl_Position = mvp_matrix * vec4(position, 1.0f);
     vert_color = color;
-    vert_normal = normal;
+    vert_normal = normalize(mat3(model_matrix) * normal);
 }
