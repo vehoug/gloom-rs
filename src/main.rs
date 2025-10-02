@@ -1,12 +1,10 @@
-// Uncomment these following global attributes to silence most warnings of "low" interest:
-/*
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(unreachable_code)]
 #![allow(unused_mut)]
 #![allow(unused_unsafe)]
 #![allow(unused_variables)]
-*/
+
 extern crate nalgebra_glm as glm;
 use std::{ mem, ptr, os::raw::c_void };
 use std::thread;
@@ -15,15 +13,18 @@ use std::sync::{Mutex, Arc, RwLock};
 mod shader;
 mod util;
 mod mesh;
+mod toolbox;
+mod scene_graph;
 
 use glutin::event::{Event, WindowEvent, DeviceEvent, KeyboardInput, ElementState::{Pressed, Released}, VirtualKeyCode::{self, *}};
 use glutin::event_loop::ControlFlow;
+use scene_graph::SceneNode;
 
-// initial window size
+// Initial window size
 const INITIAL_SCREEN_W: u32 = 800;
 const INITIAL_SCREEN_H: u32 = 600;
 
-// == // Helper functions to make interacting with OpenGL a little bit prettier. You *WILL* need these! // == //
+// Defining helper functions for OpenGL interactions
 
 // Get the size of an arbitrary array of numbers measured in bytes
 // Example usage:  byte_size_of_array(my_array)
@@ -48,10 +49,6 @@ fn size_of<T>() -> i32 {
 fn offset<T>(n: u32) -> *const c_void {
     (n * mem::size_of::<T>() as u32) as *const T as *const c_void
 }
-
-// Get a null pointer (equivalent to an offset of 0)
-// ptr::null()
-
 
 // Generate a Vertex Array Object (VAO) and return its ID
 unsafe fn create_vao(vertices: &Vec<f32>, indices: &Vec<u32>, colors: &Vec<f32>, normals: &Vec<f32>) -> u32 {
@@ -194,33 +191,9 @@ fn main() {
             println!("GLSL\t: {}", util::get_gl_string(gl::SHADING_LANGUAGE_VERSION));
         }
 
-        // == // Set up your VAO around here
-
-        // Define vertex data for triangles
-        let vertices: &Vec<f32> = &vec![
-            -0.7, -0.1, 0.0,  -0.5, -0.1, 0.0,  -0.6, 0.1, 0.0,
-             0.5, -0.1, 0.0,   0.7, -0.1, 0.0,   0.6, 0.1, 0.0,
-            -0.1,  0.4, 0.0,   0.1,  0.4, 0.0,   0.0, 0.6, 0.0,
-            -0.1, -0.6, 0.0,   0.1, -0.6, 0.0,   0.0, -0.4, 0.0
-        ];
-
-        let colors: &Vec<f32> = &vec![
-            1.0, 0.0, 0.0, 1.0,   0.0, 1.0, 0.0, 1.0,   0.0, 0.0, 1.0, 1.0,
-            1.0, 1.0, 0.0, 0.9,   0.0, 1.0, 1.0, 0.9,   1.0, 0.0, 1.0, 0.9,
-            1.0, 0.5, 0.5, 0.8,   0.5, 1.0, 0.5, 0.8,   0.5, 0.5, 1.0, 0.8,
-            1.0, 1.0, 1.0, 0.7,   0.5, 0.5, 0.5, 0.7,   0.2, 0.2, 0.2, 0.7
-        ];
-
-        // Define index data for triangles
-        let indices: &Vec<u32> = &vec![
-            0, 1, 2,
-            3, 4, 5,
-            6, 7, 8,
-            9, 10, 11
-        ];
-
-        // Create single VAO containing all triangles
-        // let vao = unsafe { create_vao(vertices, indices, colors) };
+        //=======================================================//
+        //---------------------VAO setup-------------------------//
+        //=======================================================//
 
         // Define relative paths to the simple shader files
         let vertex_shader_path: &str = "./shaders/simple.vert";
@@ -233,10 +206,44 @@ fn main() {
         // Load the lunar surface model mesh 
         let lunar_surface = mesh::Terrain::load(lunar_surface_path);
 
-        let vao = unsafe { create_vao(&lunar_surface.vertices, 
-                                           &lunar_surface.indices, 
-                                           &lunar_surface.colors,
-                                           &lunar_surface.normals) 
+        // Create lunar surface VAO
+        let lunar_surface_vao = unsafe { 
+            create_vao(&lunar_surface.vertices, 
+                &lunar_surface.indices, 
+                &lunar_surface.colors,
+                &lunar_surface.normals) 
+        };
+
+        // Load the helicopter model mesh
+        let helicopter = mesh::Helicopter::load(helicopter_path);
+
+        // Create VAOs for individual helicopter parts
+        let helicopter_body_vao = unsafe { 
+            create_vao(&helicopter.body.vertices,
+                &helicopter.body.indices, 
+                &helicopter.body.colors, 
+                &helicopter.body.normals)
+        };
+
+        let helicopter_door_vao = unsafe { 
+            create_vao(&helicopter.door.vertices,
+                &helicopter.door.indices, 
+                &helicopter.door.colors, 
+                &helicopter.door.normals)
+        };
+
+        let helicopter_main_rotor_vao = unsafe { 
+            create_vao(&helicopter.main_rotor.vertices,
+                &helicopter.main_rotor.indices, 
+                &helicopter.main_rotor.colors, 
+                &helicopter.main_rotor.normals)
+        };
+
+        let helicopter_tail_rotor_vao = unsafe { 
+            create_vao(&helicopter.tail_rotor.vertices,
+                &helicopter.tail_rotor.indices, 
+                &helicopter.tail_rotor.colors, 
+                &helicopter.tail_rotor.normals)
         };
 
         // Create the simple shader object
@@ -247,10 +254,45 @@ fn main() {
                 .link()
         };
 
-        // Initialize camera pose: position (x, y, z) and rotation (pitch, yaw) w/o roll
+        //=======================================================//
+        //-----------------Scene Graph setup---------------------//
+        //=======================================================//
+
+        let mut helicopters: Vec<scene_graph::Node> = Vec::new();
+        let n_helicopters: usize = 5;
+        let heli_x_offset: f32 = 20.0;
+        let heli_y_offset: f32 = 5.0;
+
+        let mut root_node = SceneNode::new();
+        let mut terrain_node = SceneNode::from_vao(lunar_surface_vao, lunar_surface.indices.len() as i32);
+
+        root_node.add_child(&terrain_node);
+
+        // Create scene graph nodes for each helicopter
+        for i in 0..n_helicopters {
+            let mut helicopter_body_node = SceneNode::from_vao(helicopter_body_vao, helicopter.body.indices.len() as i32);
+            let mut helicopter_door_node = SceneNode::from_vao(helicopter_door_vao, helicopter.door.indices.len() as i32);
+            let mut helicopter_main_rotor_node = SceneNode::from_vao(helicopter_main_rotor_vao, helicopter.main_rotor.indices.len() as i32);
+            let mut helicopter_tail_rotor_node = SceneNode::from_vao(helicopter_tail_rotor_vao, helicopter.tail_rotor.indices.len() as i32);
+
+            // Spawn helicopters with different initial positions
+            helicopter_body_node.position = glm::vec3(i as f32 * heli_x_offset, i as f32 * heli_y_offset, 0.0);
+            helicopter_tail_rotor_node.reference_point = glm::vec3(0.35, 2.3, 10.4);
+
+            helicopter_body_node.add_child(&helicopter_door_node);
+            helicopter_body_node.add_child(&helicopter_main_rotor_node);
+            helicopter_body_node.add_child(&helicopter_tail_rotor_node);
+
+            terrain_node.add_child(&helicopter_body_node);
+            helicopters.push(helicopter_body_node);
+        }
+
+        let mut helicopter_heading: toolbox::Heading;
+
+        // Initialize camera pose: position (x, y, z) and rotation (yaw, pitch) w/o roll
         let mut camera_pose: Vec<f32> = vec![
-            0.0, 0.0, 0.0,  // Position: x, y, z
-            0.0, 0.0        // Rotation: pitch, yaw
+            -15.0, 2.0, -1.0,  // Position: x, y, z
+            -3.14/2.0, 0.0        // Rotation: yaw, pitch
         ];
 
         // The main rendering loop
@@ -282,22 +324,22 @@ fn main() {
                         //    https://docs.rs/winit/0.25.0/winit/event/enum.VirtualKeyCode.html
 
                         VirtualKeyCode::A => {
-                            camera_pose[0] -= 1.0 * delta_time;
+                            camera_pose[0] -= 10.0 * delta_time;
                         }
                         VirtualKeyCode::D => {
-                            camera_pose[0] += 1.0 * delta_time;
+                            camera_pose[0] += 10.0 * delta_time;
                         }
                         VirtualKeyCode::W => {
-                            camera_pose[2] -= 1.0 * delta_time;
+                            camera_pose[2] -= 10.0 * delta_time;
                         }
                         VirtualKeyCode::S => {
-                            camera_pose[2] += 1.0 * delta_time;
+                            camera_pose[2] += 10.0 * delta_time;
                         }
                         VirtualKeyCode::Space => {
-                            camera_pose[1] += 1.0 * delta_time;
+                            camera_pose[1] += 10.0 * delta_time;
                         }
                         VirtualKeyCode::LShift => {
-                            camera_pose[1] -= 1.0 * delta_time;
+                            camera_pose[1] -= 10.0 * delta_time;
                         }
                         VirtualKeyCode::Right => {
                             camera_pose[3] += 1.0 * delta_time;
@@ -351,7 +393,28 @@ fn main() {
                                                            1.0, 1000.0);
 
             // Compute final transformation with matrix multiplication
-            transform = projection * camera_rotate * camera_translate * translate_z * transform;
+            transform = projection * camera_rotate * camera_translate * transform;
+
+            let transformation_so_far: glm::Mat4 = glm::identity();
+
+            // Compute helicopter animations
+            let mut rotation_angle: f32 = elapsed * 15.0;
+
+            // Rotate helicopter rotors for each helicopter
+            for helicopter in &mut helicopters {
+                helicopter.get_child(1).rotation = glm::vec3(0.0, rotation_angle, 0.0);
+                helicopter.get_child(2).rotation = glm::vec3(rotation_angle, 0.0, 0.0);
+            }
+
+            helicopter_heading = toolbox::simple_heading_animation(elapsed);
+
+            // Update pose for each helicopter with heading
+            for i in 0..n_helicopters {
+                let helicopter = &mut helicopters[i];
+                helicopter.position = glm::vec3(helicopter_heading.x + i as f32 * heli_x_offset, heli_y_offset, helicopter_heading.z);
+                // Note: Non-conventional order of roll, pitch, and yaw because of helicopter's coordinate system
+                helicopter.rotation = glm::vec3(helicopter_heading.pitch, helicopter_heading.yaw, helicopter_heading.roll);
+            }
 
             unsafe {
                 // Clear the color and depth buffers
@@ -361,17 +424,39 @@ fn main() {
                 // Activate the shader program
                 simple_shader.activate();
 
-                // == // Issue the necessary gl:: commands to draw your scene here
+                //===============================================================//
+                //-------------------Drawing the OpenGL scene--------------------//
+                //===============================================================// 
 
-                // Upload transformation matrix to the vertex shader
-                let location = simple_shader.get_uniform_location("transform");
-                gl::UniformMatrix4fv(location, 1, gl::FALSE, transform.as_ptr());
-                
-                gl::BindVertexArray(vao);
-                
-                // Draw all triangles from VAO
-                gl::DrawElements(gl::TRIANGLES, lunar_surface.indices.len() as i32, gl::UNSIGNED_INT, std::ptr::null());
-                
+                unsafe fn draw_scene(node: &scene_graph::SceneNode, view_projection_matrix: &glm::Mat4, transformation_so_far: &glm::Mat4, shader: &shader::Shader) {
+                    let mut node_transform: glm::Mat4 = glm::identity();
+
+                    let to_reference: glm::Mat4 = glm::translation(&-node.reference_point);
+                    let from_reference: glm::Mat4 = glm::translation(&node.reference_point);
+
+                    let translation: glm::Mat4 = glm::translation(&node.position);
+                    let scale: glm::Mat4 = glm::scaling(&node.scale);
+
+                    let roll: glm::Mat4 = glm::rotation(node.rotation.x, &glm::vec3(1.0, 0.0, 0.0));
+                    let pitch: glm::Mat4 = glm::rotation(node.rotation.y, &glm::vec3(0.0, 1.0, 0.0));
+                    let yaw: glm::Mat4 = glm::rotation(node.rotation.z, &glm::vec3(0.0, 0.0, 1.0));
+
+                    let model_matrix: glm::Mat4 = transformation_so_far * translation * from_reference * scale * yaw * pitch * roll * to_reference;
+                    let mvp_matrix: glm::Mat4 = view_projection_matrix * model_matrix;
+
+                    if node.vao_id != 0 {
+                        gl::UniformMatrix4fv(shader.get_uniform_location("mvp_matrix"), 1, gl::FALSE, mvp_matrix.as_ptr());
+                        gl::UniformMatrix4fv(shader.get_uniform_location("model_matrix"), 1, gl::FALSE, model_matrix.as_ptr());
+                        gl::BindVertexArray(node.vao_id);
+                        gl::DrawElements(gl::TRIANGLES, node.index_count, gl::UNSIGNED_INT, std::ptr::null());
+                    }
+
+                    for &child in &node.children {
+                        draw_scene(&*child, view_projection_matrix, &(model_matrix), shader);
+                    }
+                }
+
+                draw_scene(&root_node, &transform, &transformation_so_far, &simple_shader);
 
             }
 
