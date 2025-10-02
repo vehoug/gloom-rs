@@ -4,7 +4,6 @@ in vec4 vert_color;
 in vec3 vert_normal;
 
 out vec4 frag_color;
-// out vec3 frag_color_normal;
 
 vec3 frag_color_temp;
 vec3 light_direction = normalize(vec3(0.8, -0.5, 0.6));
